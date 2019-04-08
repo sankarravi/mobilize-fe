@@ -2,6 +2,12 @@ import React, { Component } from 'react';
 import axios from 'axios';
 import moment from 'moment-timezone';
 import {
+  withScriptjs,
+  withGoogleMap,
+  GoogleMap,
+  Marker,
+} from 'react-google-maps';
+import {
   AppBar,
   Toolbar,
   Typography,
@@ -26,6 +32,8 @@ const styles = theme => ({
   },
 });
 
+const apiKey = 'AIzaSyD27mEipBpg0abK0P5raw1OkOWeGZcGqQM';
+
 const Header = () => (
   <AppBar position="absolute" color="default">
     <Toolbar>
@@ -34,6 +42,36 @@ const Header = () => (
       </Typography>
     </Toolbar>
   </AppBar>
+);
+
+const MapComponent = withScriptjs(
+  withGoogleMap(props => {
+    const events = props.events;
+    const locations = [];
+    events.forEach(event => {
+      const location =
+        event && event.location && event.location.location
+          ? event.location.location
+          : undefined;
+      if (location && location.latitude) {
+        locations.push({
+          id: event.id,
+          lat: location.latitude,
+          lng: location.longitude,
+        });
+      }
+    });
+    if (locations.length === 0) {
+      return null;
+    }
+    return (
+      <GoogleMap defaultZoom={7} defaultCenter={locations[0]}>
+        {locations.map(loc => (
+          <Marker key={loc.id} position={loc} />
+        ))}
+      </GoogleMap>
+    );
+  })
 );
 
 class App extends Component {
@@ -97,7 +135,12 @@ class App extends Component {
     return (
       <List className={classes.list}>
         {this.state.events.map(event => (
-          <ListItem alignItems="flex-start" button={true} divider={true}>
+          <ListItem
+            alignItems="flex-start"
+            button={true}
+            divider={true}
+            key={event.id}
+          >
             {event.featured_image_url &&
             !this.state.avatarsWithErrors[event.id] ? (
               <ListItemAvatar>
@@ -151,7 +194,17 @@ class App extends Component {
         <div className="App__left">
           <Paper className={classes.root}>{this.renderEventList()}</Paper>
         </div>
-        <div className="App__right" />
+        <div className="App__right">
+          <Paper className={classes.root}>
+            <MapComponent
+              events={this.state.events}
+              googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=3.exp&libraries=geometry,drawing,places`}
+              loadingElement={<div style={{ height: `100%` }} />}
+              containerElement={<div className="Map__container" />}
+              mapElement={<div style={{ height: `100%` }} />}
+            />
+          </Paper>
+        </div>
       </div>
     );
   }
