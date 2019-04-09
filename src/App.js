@@ -98,6 +98,7 @@ class App extends Component {
           <EventList
             events={this.state.events}
             genOnEventClick={this.genOnEventClick}
+            fetchNextPage={this.fetchNextPage}
             loading={this.state.loading}
             nextUrl={this.state.nextUrl}
             didAvatarFailToLoad={this.didAvatarFailToLoad}

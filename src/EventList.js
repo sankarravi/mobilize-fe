@@ -44,7 +44,7 @@ const EventLocation = ({ event }) => {
   if (location.locality) {
     locationStr += `, ${location.locality}`;
   }
-  return locationStr;
+  return locationStr || null;
 };
 
 const EventList = (props) => {
@@ -55,6 +55,7 @@ const EventList = (props) => {
     didAvatarFailToLoad,
     onAvatarLoadFailure,
     genOnEventClick,
+    fetchNextPage,
   } = props;
   return (
     <List>
@@ -106,7 +107,7 @@ const EventList = (props) => {
             <Button
               variant="contained"
               color="primary"
-              onClick={() => this.fetchNextPage()}
+              onClick={() => fetchNextPage()}
               disabled={loading}
             >
               See More
