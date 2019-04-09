@@ -3,7 +3,7 @@ A FE-focused take-home exercise for https://mobilizeamerica.io. It consumes the 
 It was bootstrapped with `create-react-app`. To run it locally:
 
 1. `yarn install`
-2. `yarn run`
+2. `yarn start`
 
 It can also be tested with `yarn test` and built for production deploy with `yarn build`.
 
