@@ -9,13 +9,13 @@ import {
 } from 'react-google-maps';
 import {
   AppBar,
+  Button,
   Toolbar,
   Typography,
   List,
   ListItem,
   ListItemText,
   Avatar,
-  Paper,
   ListItemAvatar,
 } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
@@ -64,6 +64,8 @@ const MapComponent = withScriptjs(
     if (locations.length === 0) {
       return null;
     }
+    // TODO: ideally the default center would be the average of the lats & lngs,
+    // instead of just the first one
     return (
       <GoogleMap defaultZoom={7} defaultCenter={locations[0]}>
         {locations.map(loc => (
@@ -88,21 +90,18 @@ class App extends Component {
   }
 
   componentDidMount() {
-    this.fetchEvents();
+    const nowInSeconds = Math.floor(new Date().getTime() / 1000);
+    this.fetchEvents('https://api.mobilize.us/v1/events', {
+      timeslot_start: `gte_${nowInSeconds}`, // start by filtering for events that are still active
+    });
   }
 
-  fetchEvents = (params = {}) => {
-    const nowInSeconds = Math.floor(new Date().getTime() / 1000);
-    axios
-      .get('https://api.mobilize.us/v1/events', {
-        params: {
-          ...params,
-          timeslot_start: `gte_${nowInSeconds}`, // always filter to events that still active
-        },
-      })
+  fetchEvents = (url, params) => {
+    return axios
+      .get(url, { params })
       .then(({ data }) => {
         this.setState({
-          events: data.data,
+          events: [...this.state.events, ...data.data],
           nextUrl: data.next,
           prevUrl: data.previous,
           totalCount: data.count,
@@ -113,8 +112,12 @@ class App extends Component {
       });
   };
 
+  fetchNextPage = (params = {}) => {
+    return this.fetchEvents(this.state.nextUrl, params);
+  };
+
   renderDate = event => {
-    if (!event.timeslots && event.timeslots.length === 0) {
+    if (!event.timeslots || event.timeslots.length === 0) {
       return null;
     }
 
@@ -182,6 +185,19 @@ class App extends Component {
             />
           </ListItem>
         ))}
+        {this.state.nextUrl && (
+          <ListItem>
+            <div className="List__load-more">
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => this.fetchNextPage()}
+              >
+                Load More
+              </Button>
+            </div>
+          </ListItem>
+        )}
       </List>
     );
   };
@@ -191,19 +207,15 @@ class App extends Component {
     return (
       <div className="App">
         <Header />
-        <div className="App__left">
-          <Paper className={classes.root}>{this.renderEventList()}</Paper>
-        </div>
+        <div className="App__left">{this.renderEventList()}</div>
         <div className="App__right">
-          <Paper className={classes.root}>
-            <MapComponent
-              events={this.state.events}
-              googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=3.exp&libraries=geometry,drawing,places`}
-              loadingElement={<div style={{ height: `100%` }} />}
-              containerElement={<div className="Map__container" />}
-              mapElement={<div style={{ height: `100%` }} />}
-            />
-          </Paper>
+          <MapComponent
+            events={this.state.events}
+            googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=3.exp&libraries=geometry,drawing,places`}
+            loadingElement={<div style={{ height: `100%` }} />}
+            containerElement={<div className="Map__container" />}
+            mapElement={<div style={{ height: `100%` }} />}
+          />
         </div>
       </div>
     );

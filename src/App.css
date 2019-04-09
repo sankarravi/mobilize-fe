@@ -6,7 +6,7 @@
   margin-top: 64px; /* based on header height */
   min-width: 300px;
   width: 50%;
-  max-height: 500px;
+  max-height: calc(100vh - 64px);
   overflow-y: auto;
 }
 
@@ -23,6 +23,12 @@
   height: 40px;
 }
 
+.List__load-more {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
 .Map__container {
-  height: 500px;
+  height: calc(100vh - 64px);
 }
