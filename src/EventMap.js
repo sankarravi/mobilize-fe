@@ -46,7 +46,6 @@ const InternalEventMap = ({ events, genOnEventClick }) => {
   // 1. Ideally the default center would be [avg lat, avg lng] instead of just the first item –
   //    this would give us a map centered relative to our points
   // 2. Ideally the map would also re-center itself after new points are added
-  // 3. Clicking on a marker
   return (
     <GoogleMap defaultZoom={7} defaultCenter={markers[0]}>
       {markers.map((loc) => (

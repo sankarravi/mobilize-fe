@@ -1,0 +1,30 @@
+The page has three major components:
+A. A header
+B. An event list (on the left)
+C. An event map (on the right)
+
+* Header *
+The header is currently extremely simple but would be a good place to put the location filter.
+
+* Event List *
+The event list tries to strike a good balance amongst:
+1. Using an existing material-ui component (for convenience in the exercise)
+2. Showing enough information to render a drill-down event view non-critical
+3. Being concise enough to keep the list useful
+
+I chose to just have a "See More" button instead of real pagination since I see this interface as about untargeted exploring – people aren't trying to jump to a specific page to find a specific item. To the exten that they have specific wants, those should be covered by filters (like on location and cause and event type).
+
+Further areas for work:
+1. This should probably be a custom element that lets us meet our visual needs more specifically, since it's such a critical part of our UX
+2. Clicking on an item should render a custom event page and that page should have details on all event times as well as clickable links to google maps
+3. The page gets sluggish with a few pages of events loaded. We should use react-window or something similar to only render the items in the list that are actually in view. This could go along well with infinite scroll as well.
+
+* Event Map *
+This uses https://www.npmjs.com/package/react-google-maps and a google maps API key I registered to render the event locations. This library hasn't been updated in a year but it also seems like a pretty thin wrapper on Google's API and it seemed the most popular, but still, digging into its stability / performance / tradeoffs and whether we want to use something like react-window to un-render markers that are out of view seems relevant.
+
+I also called out two areas for improvement in the code:
+1. Ideally the default center would be [avg lat, avg lng] instead of just the first item – this would give us a map centered relative to our points
+2. Ideally the map would also re-center itself after new points are added
+
+* Tests *
+I added a very optimistic case test but it provides scaffolding we could use to add real test coverage of various edge cases. We should also add React Error Boundaries around the map and around each event in the list so that the page is resilient to errors in the JS rendering logic.
