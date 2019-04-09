@@ -30,6 +30,9 @@ const styles = theme => ({
   table: {
     minWidth: 700,
   },
+  inline: {
+    display: 'inline',
+  },
 });
 
 const apiKey = 'AIzaSyD27mEipBpg0abK0P5raw1OkOWeGZcGqQM';
@@ -86,6 +89,7 @@ class App extends Component {
       nextUrl: undefined,
       prevUrl: undefined,
       totalCount: undefined,
+      loading: true,
     };
   }
 
@@ -97,6 +101,7 @@ class App extends Component {
   }
 
   fetchEvents = (url, params) => {
+    this.setState({ loading: true });
     return axios
       .get(url, { params })
       .then(({ data }) => {
@@ -105,10 +110,14 @@ class App extends Component {
           nextUrl: data.next,
           prevUrl: data.previous,
           totalCount: data.count,
+          loading: false,
         });
       })
-      .catch(({ error }) => {
-        // todo
+      .catch(({ data }) => {
+        if (data) {
+          console.error(data.error);
+        }
+        this.setState({ loading: false });
       });
   };
 
@@ -122,15 +131,29 @@ class App extends Component {
     }
 
     const startTime = moment.unix(event.timeslots[0].start_date);
-    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    const zoneString = moment.tz(zone).format('z');
-    const formatted =
-      startTime.format('ddd, MMM Do YYYY hA z') + ' ' + zoneString;
     if (event.timeslots.length === 1) {
-      return formatted;
+      const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const zoneString = moment.tz(zone).format('z');
+      return startTime.format('ddd, MMM Do hA z') + ' ' + zoneString;
     } else if (event.timeslots.length >= 1) {
+      const formatted = startTime.format('ddd, MMM Do');
       return `${event.timeslots.length} events starting ${formatted}`;
     }
+  };
+
+  renderLocation = event => {
+    const { location } = event;
+    if (!location) {
+      return null;
+    }
+
+    let locationStr = location.venue;
+    if (location.address_lines && location.address_lines.length) {
+      locationStr += ` (${location.address_lines
+        .filter(x => x.length > 0)
+        .join(', ')})`;
+    }
+    return locationStr;
   };
 
   renderEventList = () => {
@@ -169,12 +192,11 @@ class App extends Component {
               primary={event.title}
               secondary={
                 <React.Fragment>
-                  <Typography
-                    component="span"
-                    className={classes.inline}
-                    color="textPrimary"
-                  >
+                  <Typography component="span" color="textPrimary">
                     {this.renderDate(event)}
+                  </Typography>
+                  <Typography component="span" color="textSecondary">
+                    {this.renderLocation(event)}
                   </Typography>
                   <br />
                   {event.description && event.description.length > 200
@@ -192,8 +214,9 @@ class App extends Component {
                 variant="contained"
                 color="primary"
                 onClick={() => this.fetchNextPage()}
+                disabled={this.state.loading}
               >
-                Load More
+                See More
               </Button>
             </div>
           </ListItem>
@@ -203,7 +226,6 @@ class App extends Component {
   };
 
   render() {
-    const { classes } = this.props;
     return (
       <div className="App">
         <Header />
