@@ -1,41 +1,16 @@
 import React, { Component } from 'react';
 import axios from 'axios';
-import moment from 'moment-timezone';
-import {
-  withScriptjs,
-  withGoogleMap,
-  GoogleMap,
-  Marker,
-} from 'react-google-maps';
-import {
-  AppBar,
-  Button,
-  Toolbar,
-  Typography,
-  List,
-  ListItem,
-  ListItemText,
-  Avatar,
-  ListItemAvatar,
-} from '@material-ui/core';
+import { AppBar, Toolbar, Typography } from '@material-ui/core';
 import { withStyles } from '@material-ui/core/styles';
+import EventList from './EventList';
+import EventMap from './EventMap';
 import './App.css';
 
-const styles = theme => ({
-  root: {
-    width: '100%',
-    marginTop: theme.spacing.unit * 3,
-    overflowX: 'auto',
-  },
-  table: {
-    minWidth: 700,
-  },
+const styles = (theme) => ({
   inline: {
     display: 'inline',
   },
 });
-
-const apiKey = 'AIzaSyD27mEipBpg0abK0P5raw1OkOWeGZcGqQM';
 
 const Header = () => (
   <AppBar position="absolute" color="default">
@@ -45,38 +20,6 @@ const Header = () => (
       </Typography>
     </Toolbar>
   </AppBar>
-);
-
-const MapComponent = withScriptjs(
-  withGoogleMap(props => {
-    const events = props.events;
-    const locations = [];
-    events.forEach(event => {
-      const location =
-        event && event.location && event.location.location
-          ? event.location.location
-          : undefined;
-      if (location && location.latitude) {
-        locations.push({
-          id: event.id,
-          lat: location.latitude,
-          lng: location.longitude,
-        });
-      }
-    });
-    if (locations.length === 0) {
-      return null;
-    }
-    // TODO: ideally the default center would be the average of the lats & lngs,
-    // instead of just the first one
-    return (
-      <GoogleMap defaultZoom={7} defaultCenter={locations[0]}>
-        {locations.map(loc => (
-          <Marker key={loc.id} position={loc} />
-        ))}
-      </GoogleMap>
-    );
-  })
 );
 
 class App extends Component {
@@ -125,119 +68,34 @@ class App extends Component {
     return this.fetchEvents(this.state.nextUrl, params);
   };
 
-  renderDate = event => {
-    if (!event.timeslots || event.timeslots.length === 0) {
-      return null;
-    }
-
-    const startTime = moment.unix(event.timeslots[0].start_date);
-    if (event.timeslots.length === 1) {
-      const zone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-      const zoneString = moment.tz(zone).format('z');
-      return startTime.format('ddd, MMM Do hA z') + ' ' + zoneString;
-    } else if (event.timeslots.length >= 1) {
-      const formatted = startTime.format('ddd, MMM Do');
-      return `${event.timeslots.length} events starting ${formatted}`;
-    }
+  didAvatarFailToLoad = (eventId) => {
+    return Boolean(this.state.avatarsWithErrors[eventId]);
   };
 
-  renderLocation = event => {
-    const { location } = event;
-    if (!location) {
-      return null;
-    }
-
-    let locationStr = location.venue;
-    if (location.address_lines && location.address_lines.length) {
-      locationStr += ` (${location.address_lines
-        .filter(x => x.length > 0)
-        .join(', ')})`;
-    }
-    return locationStr;
-  };
-
-  renderEventList = () => {
-    const { classes } = this.props;
-    return (
-      <List className={classes.list}>
-        {this.state.events.map(event => (
-          <ListItem
-            alignItems="flex-start"
-            button={true}
-            divider={true}
-            key={event.id}
-          >
-            {event.featured_image_url &&
-            !this.state.avatarsWithErrors[event.id] ? (
-              <ListItemAvatar>
-                <Avatar
-                  alt="Profile Picture"
-                  src={event.featured_image_url}
-                  imgProps={{
-                    onError: e => {
-                      this.setState({
-                        avatarsWithErrors: {
-                          ...this.state.avatarsWithErrors,
-                          [event.id]: true,
-                        },
-                      });
-                    },
-                  }}
-                />
-              </ListItemAvatar>
-            ) : (
-              <div className="List__empty-avatar" />
-            )}
-            <ListItemText
-              primary={event.title}
-              secondary={
-                <React.Fragment>
-                  <Typography component="span" color="textPrimary">
-                    {this.renderDate(event)}
-                  </Typography>
-                  <Typography component="span" color="textSecondary">
-                    {this.renderLocation(event)}
-                  </Typography>
-                  <br />
-                  {event.description && event.description.length > 200
-                    ? event.description.substring(0, 200) + '...'
-                    : event.description}
-                </React.Fragment>
-              }
-            />
-          </ListItem>
-        ))}
-        {this.state.nextUrl && (
-          <ListItem>
-            <div className="List__load-more">
-              <Button
-                variant="contained"
-                color="primary"
-                onClick={() => this.fetchNextPage()}
-                disabled={this.state.loading}
-              >
-                See More
-              </Button>
-            </div>
-          </ListItem>
-        )}
-      </List>
-    );
+  onAvatarLoadFailure = (eventId) => {
+    this.setState({
+      avatarsWithErrors: {
+        ...this.state.avatarsWithErrors,
+        [eventId]: true,
+      },
+    });
   };
 
   render() {
     return (
       <div className="App">
         <Header />
-        <div className="App__left">{this.renderEventList()}</div>
-        <div className="App__right">
-          <MapComponent
+        <div className="App__left">
+          <EventList
             events={this.state.events}
-            googleMapURL={`https://maps.googleapis.com/maps/api/js?key=${apiKey}&v=3.exp&libraries=geometry,drawing,places`}
-            loadingElement={<div style={{ height: `100%` }} />}
-            containerElement={<div className="Map__container" />}
-            mapElement={<div style={{ height: `100%` }} />}
+            loading={this.state.loading}
+            nextUrl={this.state.nextUrl}
+            didAvatarFailToLoad={this.didAvatarFailToLoad}
+            onAvatarLoadFailure={this.onAvatarLoadFailure}
           />
+        </div>
+        <div className="App__right">
+          <EventMap events={this.state.events} />
         </div>
       </div>
     );
