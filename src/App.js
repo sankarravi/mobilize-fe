@@ -81,6 +81,15 @@ class App extends Component {
     });
   };
 
+  genOnEventClick = (event) => () => {
+    // TODO: obviously sort of cheating to open the existing mobilize page,
+    //  but I didn't get a chance to build a custom event view and still wanted
+    //  to have a stub for the UX expected here.
+    // The refinement would look like something like a replacement of the Map with event details
+    // and a back button for returning to the list view
+    window.open(`https://www.mobilize.us/event/${event.id}/`);
+  };
+
   render() {
     return (
       <div className="App">
@@ -88,6 +97,7 @@ class App extends Component {
         <div className="App__left">
           <EventList
             events={this.state.events}
+            genOnEventClick={this.genOnEventClick}
             loading={this.state.loading}
             nextUrl={this.state.nextUrl}
             didAvatarFailToLoad={this.didAvatarFailToLoad}
@@ -95,7 +105,10 @@ class App extends Component {
           />
         </div>
         <div className="App__right">
-          <EventMap events={this.state.events} />
+          <EventMap
+            events={this.state.events}
+            genOnEventClick={this.genOnEventClick}
+          />
         </div>
       </div>
     );
