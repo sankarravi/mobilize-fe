@@ -50,6 +50,7 @@ const EventLocation = ({ event }) => {
 const EventList = (props) => {
   const {
     events,
+    error,
     loading,
     nextUrl,
     didAvatarFailToLoad,
@@ -101,7 +102,12 @@ const EventList = (props) => {
           />
         </ListItem>
       ))}
-      {nextUrl && (
+      {error && !loading && events.length === 0 && (
+        <ListItem>
+          <ListItemText primary="No valid events found!" />
+        </ListItem>
+      )}
+      {nextUrl && !error && (
         <ListItem>
           <div className="List__load-more">
             <Button
@@ -110,7 +116,7 @@ const EventList = (props) => {
               onClick={() => fetchNextPage()}
               disabled={loading}
             >
-              See More
+              {loading ? 'Loading...' : 'See More'}
             </Button>
           </div>
         </ListItem>

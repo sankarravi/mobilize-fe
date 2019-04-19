@@ -36,7 +36,7 @@ const extractMarkers = (events) => {
  *         turn them into a working map
  *    3 - EventMap: injects those magic properties; this is the thing we finally export
  */
-const InternalEventMap = ({ events, genOnEventClick }) => {
+const InternalEventMap = ({ events, genOnEventClick, hasPostalFilter }) => {
   const markers = extractMarkers(events);
   if (markers.length === 0) {
     return null;
@@ -47,7 +47,10 @@ const InternalEventMap = ({ events, genOnEventClick }) => {
   //    this would give us a map centered relative to our points
   // 2. Ideally the map would also re-center itself after new points are added
   return (
-    <GoogleMap defaultZoom={7} defaultCenter={markers[0]}>
+    <GoogleMap
+      defaultZoom={hasPostalFilter ? 11 : 7}
+      defaultCenter={markers[0]}
+    >
       {markers.map((loc) => (
         <Marker key={loc.id} position={loc} onClick={genOnEventClick(loc)} />
       ))}
